@@ -1,50 +1,478 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MySQL demo</title>
-  <style>
-    body { font-family: system-ui, sans-serif; max-width: 480px; margin: 40px auto; padding: 0 16px; }
-    input { padding: 8px; width: 60%; }
-    button { padding: 8px 14px; }
-    li { margin: 6px 0; }
-    small { color: #666; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Soya Topshiriqlari</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Noto+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: tungi osmon, burchakda oy, o'rtada ensiz ustun; topshiriqlar o'ralgan sahifa (svitok) shaklida */
+:root{
+  --bg:#0a0a0f; --bg-2:#13131b; --text:#ece6d6; --muted:#8f8c9a; --line:#2b2b38;
+  --accent:#d1202f; --accent-2:#ff5a4a; --on-accent:#ffffff; --halo:rgba(209,32,47,.14);
+  --card:#e8dfcb; --card-ink:#1c1812; --card-muted:#6e6555; --shadow:rgba(0,0,0,.65);
+  --moon-a:#f6efdc; --moon-b:#cfc6ad; --moon-glow:rgba(240,232,210,.22);
+  --ember:209,32,47; --kanji-op:.045;
+  --display:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",Georgia,serif;
+  --body:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#efe7d4; --bg-2:#e5dbc2; --text:#1d1a14; --muted:#6c6454; --line:#cdc1a4;
+    --accent:#b81926; --accent-2:#c82a26; --halo:rgba(232,144,58,.28);
+    --card:#fbf6e9; --card-muted:#7a705d; --shadow:rgba(60,40,10,.35);
+    --moon-a:#ffd98a; --moon-b:#f0a04a; --moon-glow:rgba(240,160,74,.45);
+    --ember:184,25,38; --kanji-op:.06;
+    color-scheme:light;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#efe7d4; --bg-2:#e5dbc2; --text:#1d1a14; --muted:#6c6454; --line:#cdc1a4;
+  --accent:#b81926; --accent-2:#c82a26; --halo:rgba(232,144,58,.28);
+  --card:#fbf6e9; --card-muted:#7a705d; --shadow:rgba(60,40,10,.35);
+  --moon-a:#ffd98a; --moon-b:#f0a04a; --moon-glow:rgba(240,160,74,.45);
+  --ember:184,25,38; --kanji-op:.06;
+  color-scheme:light;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background-color:var(--bg);
+  background-image:radial-gradient(110% 55% at 85% 0%, var(--halo), transparent 65%);
+  background-repeat:no-repeat;
+  color:var(--text);
+  font-family:var(--body);
+  line-height:1.55;
+  min-height:100vh;
+  overflow-x:clip;
+  padding-block:28px 72px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  transition:background-color .4s ease, color .4s ease;
+}
+
+/* fon qatlamlari */
+#embers{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.moon{
+  position:fixed;top:-48px;right:-36px;width:min(34vw,230px);aspect-ratio:1;border-radius:50%;
+  background:
+    radial-gradient(circle at 63% 60%, rgba(0,0,0,.09) 0 9%, transparent 10%),
+    radial-gradient(circle at 33% 68%, rgba(0,0,0,.08) 0 6%, transparent 7%),
+    radial-gradient(circle at 40% 30%, rgba(0,0,0,.07) 0 5%, transparent 6%),
+    radial-gradient(circle at 38% 34%, var(--moon-a), var(--moon-b));
+  box-shadow:0 0 90px 24px var(--moon-glow);
+  z-index:0;pointer-events:none;
+  animation:drift 14s ease-in-out infinite alternate;
+}
+.kanji{
+  position:fixed;left:-2vw;bottom:-7vh;font-family:var(--display);font-weight:800;
+  font-size:min(46vw,420px);line-height:1;color:var(--text);opacity:var(--kanji-op);
+  z-index:0;pointer-events:none;user-select:none;
+}
+@keyframes drift{from{transform:translateY(0)}to{transform:translateY(14px)}}
+
+.wrap{position:relative;z-index:1;max-width:720px;margin:0 auto}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.eyebrow{margin:0;font-size:.74rem;font-weight:600;letter-spacing:.32em;color:var(--accent-2)}
+.ghost{
+  background:transparent;border:1px solid var(--line);color:var(--text);
+  padding:7px 14px;border-radius:999px;cursor:pointer;font:inherit;font-size:.85rem;
+  transition:border-color .2s, background-color .2s;
+}
+.ghost:hover{border-color:var(--accent-2)}
+
+h1{
+  font-family:var(--display);font-weight:800;
+  font-size:clamp(2.6rem,10vw,4.6rem);line-height:1.02;letter-spacing:-.01em;
+  margin:26px 0 12px;text-wrap:balance;
+}
+h1 span{display:block;color:var(--accent-2)}
+.lead{margin:0;max-width:46ch;color:var(--muted)}
+
+/* daraja paneli */
+.rank{
+  margin-top:30px;padding:18px 20px 16px;background:var(--bg-2);border-top:2px solid var(--accent);
+  transition:background-color .4s ease;
+}
+.rank-top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.k{display:block;font-size:.68rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+#rankName{display:block;font-family:var(--display);font-weight:800;font-size:2rem;line-height:1.15}
+.nums{display:flex;gap:26px}
+.nums b{display:block;font-family:var(--display);font-size:1.7rem;line-height:1.2;font-variant-numeric:tabular-nums}
+.bar{height:8px;margin-top:14px;background:var(--line);overflow:hidden;transform:skewX(-20deg)}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.hint{margin:10px 0 0;font-size:.85rem;color:var(--muted)}
+
+/* yangi topshiriq */
+.forge{margin-top:28px;display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+.field{flex:1 1 260px;min-width:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+input{
+  width:100%;background:transparent;border:0;border-bottom:2px solid var(--line);border-radius:0;
+  color:var(--text);font:inherit;font-size:1.05rem;padding:12px 2px;outline:none;transition:border-color .2s;
+}
+input::placeholder{color:var(--muted)}
+input:focus{border-bottom-color:var(--accent-2)}
+.btn{
+  background:var(--accent);color:var(--on-accent);border:0;cursor:pointer;
+  font-family:var(--display);font-weight:800;font-size:1.05rem;letter-spacing:.08em;
+  padding:13px 30px;clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);
+  transition:transform .2s, filter .2s;
+}
+.btn:hover{transform:translateY(-2px);filter:brightness(1.12)}
+.btn:disabled{opacity:.6;cursor:wait;transform:none}
+:focus-visible{outline:2px solid var(--accent-2);outline-offset:3px}
+
+.status{margin:20px 0 0;color:var(--muted);font-size:.92rem}
+
+/* svitoklar */
+.scrolls{list-style:none;margin:32px 0 0;padding:0 10px;display:flex;flex-direction:column;gap:28px}
+.scroll{
+  position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center;
+  padding:22px 18px;background:var(--card);color:var(--card-ink);border-radius:2px;
+  box-shadow:0 16px 30px -16px var(--shadow);
+  transition:background-color .4s ease;
+}
+.scroll::before,.scroll::after{
+  content:"";position:absolute;left:-9px;right:-9px;height:11px;border-radius:6px;
+  background:linear-gradient(#80593a,#4a3118 55%,#6d4b2d);
+  box-shadow:0 3px 6px -2px rgba(0,0,0,.4);
+}
+.scroll::before{top:-6px}
+.scroll::after{bottom:-6px}
+.scroll.enter{animation:rise .5s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0) * 55ms)}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+.tick{
+  width:34px;height:34px;border:2px solid var(--card-ink);background:transparent;border-radius:2px;
+  cursor:pointer;position:relative;flex:none;transition:background-color .2s, border-color .2s;
+}
+.tick:hover{border-color:var(--accent)}
+.tick[aria-pressed="true"]{background:var(--accent);border-color:var(--accent)}
+.tick[aria-pressed="true"]::after{
+  content:"";position:absolute;left:10px;top:3px;width:8px;height:16px;
+  border:solid #fff;border-width:0 3px 3px 0;transform:rotate(40deg);
+}
+.t{font-weight:600;font-size:1.05rem;overflow-wrap:anywhere;transition:opacity .3s}
+.when{margin-top:2px;font-size:.78rem;color:var(--card-muted);font-variant-numeric:tabular-nums}
+.is-done .t{text-decoration:line-through;text-decoration-thickness:2px;text-decoration-color:var(--accent);opacity:.55}
+
+.seal{
+  width:56px;height:56px;border:3px solid var(--accent);border-radius:50%;color:var(--accent);
+  display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:1.6rem;
+  box-shadow:inset 0 0 0 3px var(--card), inset 0 0 0 4.5px var(--accent);
+  transform:rotate(-14deg);opacity:.9;
+}
+.seal.fresh{animation:stamp .42s cubic-bezier(.2,1.5,.4,1)}
+@keyframes stamp{from{transform:rotate(-30deg) scale(2.6);opacity:0}to{transform:rotate(-14deg) scale(1);opacity:.9}}
+
+.empty{
+  list-style:none;text-align:center;color:var(--muted);padding:34px 12px;
+  border:1px dashed var(--line);
+}
+.foot{margin:44px 0 0;font-size:.78rem;color:var(--muted)}
+
+.toast{
+  position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom, 0px));z-index:5;
+  transform:translate(-50%,12px);background:var(--accent);color:var(--on-accent);
+  padding:10px 20px;font-size:.9rem;font-weight:500;opacity:0;pointer-events:none;
+  transition:opacity .25s, transform .25s;max-width:calc(100vw - 32px);
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (max-width:420px){
+  .scroll{gap:12px;padding:20px 14px}
+  .seal{width:46px;height:46px;font-size:1.3rem}
+  .btn{width:100%}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none !important;transition:none !important}
+}
+</style>
 </head>
 <body>
-  <h1>Ismingizni qoldiring</h1>
-  <input id="name" placeholder="Ism" maxlength="100">
-  <button onclick="add()">Saqlash</button>
-  <ul id="list"></ul>
+<canvas id="embers" aria-hidden="true"></canvas>
+<div class="moon" aria-hidden="true"></div>
+<div class="kanji" aria-hidden="true">忍</div>
+
+<main class="wrap">
+  <header class="top">
+    <p class="eyebrow">SHINOBI DAFTARI</p>
+    <button id="theme" class="ghost" type="button" aria-label="Kun va tun rejimini almashtirish">☾ Tun</button>
+  </header>
+
+  <h1>Soya <span>topshiriqlari</span></h1>
+  <p class="lead">Har bir topshiriq bitta muhr. Yozing, bajaring, darajangizni oshiring.</p>
+
+  <section class="rank" aria-label="Daraja">
+    <div class="rank-top">
+      <div>
+        <span class="k">Daraja</span>
+        <strong id="rankName">Shogird</strong>
+      </div>
+      <div class="nums">
+        <div><span class="k">Jami</span><b id="nTotal">0</b></div>
+        <div><span class="k">Bajarilgan</span><b id="nDone">0</b></div>
+      </div>
+    </div>
+    <div class="bar" id="bar" role="progressbar" aria-label="Keyingi darajagacha" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="barFill"></i></div>
+    <p class="hint" id="rankHint"></p>
+  </section>
+
+  <form id="form" class="forge" autocomplete="off">
+    <div class="field">
+      <label class="sr" for="name">Yangi topshiriq</label>
+      <input id="name" placeholder="Yangi topshiriq, masalan: 30 daqiqa mashq" maxlength="100">
+    </div>
+    <button id="save" class="btn" type="submit">Muhrlash</button>
+  </form>
+
+  <p id="status" class="status" role="status">Yuklanmoqda…</p>
+
+  <ul id="list" class="scrolls"></ul>
+
+  <p class="foot">Topshiriqlar serverda saqlanadi. Bajarildi belgilari esa faqat shu qurilmada eslab qolinadi.</p>
+</main>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <script>
 const API = "/.netlify/functions/api";
+const $ = id => document.getElementById(id);
 
-async function load() {
-  const rows = await (await fetch(API)).json();
-  const ul = document.getElementById("list");
-  ul.innerHTML = "";
-  rows.forEach(r => {
+const RANKS = [
+  { n: "Shogird", at: 0 },
+  { n: "Soya", at: 3 },
+  { n: "Qilich", at: 7 },
+  { n: "Usta", at: 12 },
+  { n: "Sensey", at: 20 }
+];
+
+let rows = [];
+let done = new Set();
+let sig = "";
+let anim = true;
+let fresh = null;
+let failed = false;
+
+try { done = new Set(JSON.parse(localStorage.getItem("ninja-done") || "[]")); } catch (e) {}
+function saveDone() {
+  try { localStorage.setItem("ninja-done", JSON.stringify([...done])); } catch (e) {}
+}
+const keyOf = r => String(r.id !== undefined && r.id !== null ? r.id : r.name + "|" + r.created_at);
+
+function rankOf(n) {
+  let idx = 0;
+  RANKS.forEach((r, k) => { if (n >= r.at) idx = k; });
+  return idx;
+}
+
+function renderStats() {
+  const total = rows.length;
+  const nDone = rows.filter(r => done.has(keyOf(r))).length;
+  $("nTotal").textContent = total;
+  $("nDone").textContent = nDone;
+
+  const i = rankOf(nDone);
+  const cur = RANKS[i];
+  const next = RANKS[i + 1];
+  $("rankName").textContent = cur.n;
+
+  let pct = 100;
+  let hint = "Eng yuqori daraja. Soya sizga bo'ysunadi.";
+  if (next) {
+    pct = Math.round(((nDone - cur.at) / (next.at - cur.at)) * 100);
+    hint = "Keyingi daraja: " + next.n + ". Yana " + (next.at - nDone) + " ta topshiriq qoldi.";
+  }
+  $("barFill").style.width = pct + "%";
+  $("bar").setAttribute("aria-valuenow", String(pct));
+  $("rankHint").textContent = hint;
+}
+
+function render() {
+  const ul = $("list");
+  ul.textContent = "";
+
+  if (rows.length === 0 && !failed) {
     const li = document.createElement("li");
-    li.textContent = r.name + " ";
-    const s = document.createElement("small");
-    s.textContent = "(" + new Date(r.created_at).toLocaleString() + ")";
-    li.appendChild(s);
+    li.className = "empty";
+    li.textContent = "Hali topshiriq yo'q. Birinchi muhrni o'zingiz bosing.";
+    ul.appendChild(li);
+  }
+
+  rows.forEach((r, i) => {
+    const key = keyOf(r);
+    const isDone = done.has(key);
+
+    const li = document.createElement("li");
+    li.className = "scroll" + (isDone ? " is-done" : "") + (anim ? " enter" : "");
+    li.style.setProperty("--i", Math.min(i, 12));
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "tick";
+    btn.setAttribute("aria-pressed", String(isDone));
+    btn.setAttribute("aria-label", isDone ? "Bajarilmagan deb belgilash" : "Bajarildi deb belgilash");
+    btn.addEventListener("click", () => toggle(key));
+
+    const body = document.createElement("div");
+    const t = document.createElement("div");
+    t.className = "t";
+    t.textContent = r.name;
+    const w = document.createElement("div");
+    w.className = "when";
+    const d = new Date(r.created_at);
+    w.textContent = isNaN(d) ? "" : d.toLocaleString();
+    body.append(t, w);
+
+    li.append(btn, body);
+
+    if (isDone) {
+      const s = document.createElement("div");
+      s.className = "seal" + (key === fresh ? " fresh" : "");
+      s.setAttribute("aria-hidden", "true");
+      s.textContent = "完";
+      li.appendChild(s);
+    }
     ul.appendChild(li);
   });
+
+  fresh = null;
+  anim = false;
+  renderStats();
 }
 
-async function add() {
-  const input = document.getElementById("name");
+function toggle(key) {
+  if (done.has(key)) { done.delete(key); } else { done.add(key); fresh = key; }
+  saveDone();
+  render();
+}
+
+async function load() {
+  const status = $("status");
+  try {
+    const res = await fetch(API);
+    if (!res.ok) throw new Error(String(res.status));
+    const data = await res.json();
+    const list = Array.isArray(data) ? data : [];
+    const s = JSON.stringify(list);
+    failed = false;
+    status.hidden = true;
+    if (s !== sig || anim) {
+      sig = s;
+      rows = list;
+      render();
+    }
+  } catch (err) {
+    failed = true;
+    status.hidden = false;
+    status.textContent = "Serverga ulanib bo'lmadi. Birozdan keyin qayta urinib ko'ring.";
+    render();
+  }
+}
+
+$("form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const input = $("name");
+  const btn = $("save");
   const name = input.value.trim();
   if (!name) return;
-  await fetch(API, { method: "POST", body: JSON.stringify({ name }) });
-  input.value = "";
-  load();
+  btn.disabled = true;
+  try {
+    const res = await fetch(API, { method: "POST", body: JSON.stringify({ name }) });
+    if (!res.ok) throw new Error(String(res.status));
+    input.value = "";
+    anim = true;
+    await load();
+    toast("Topshiriq muhrlandi");
+  } catch (err) {
+    toast("Saqlab bo'lmadi. Qayta urinib ko'ring.");
+  } finally {
+    btn.disabled = false;
+    input.focus();
+  }
+});
+
+let toastTimer;
+function toast(msg) {
+  const el = $("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 2400);
 }
 
+/* kun / tun rejimi */
+const root = document.documentElement;
+function curTheme() {
+  return root.dataset.theme || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+}
+function paintToggle() {
+  $("theme").textContent = curTheme() === "dark" ? "☾ Tun" : "☀ Kun";
+}
+try {
+  const saved = localStorage.getItem("ninja-theme");
+  if (saved === "light" || saved === "dark") root.dataset.theme = saved;
+} catch (e) {}
+paintToggle();
+$("theme").addEventListener("click", () => {
+  const n = curTheme() === "dark" ? "light" : "dark";
+  root.dataset.theme = n;
+  try { localStorage.setItem("ninja-theme", n); } catch (e) {}
+  paintToggle();
+});
+
+/* uchqunlar */
+(function () {
+  const c = $("embers");
+  const x = c.getContext("2d");
+  if (!x || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  let w = 0, h = 0, dpr = 1;
+  const parts = [];
+  function size() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    w = c.width = Math.floor(innerWidth * dpr);
+    h = c.height = Math.floor(innerHeight * dpr);
+  }
+  function make(initial) {
+    return {
+      x: Math.random() * w,
+      y: initial ? Math.random() * h : h + 10,
+      r: (Math.random() * 1.7 + 0.6) * dpr,
+      vy: (Math.random() * 0.35 + 0.12) * dpr,
+      vx: (Math.random() - 0.5) * 0.25 * dpr,
+      a: Math.random() * 0.55 + 0.2,
+      ph: Math.random() * 6.28
+    };
+  }
+  size();
+  for (let i = 0; i < 46; i++) parts.push(make(true));
+  addEventListener("resize", size);
+  function frame(t) {
+    const rgb = getComputedStyle(root).getPropertyValue("--ember").trim() || "209,32,47";
+    x.clearRect(0, 0, w, h);
+    parts.forEach((p, i) => {
+      p.y -= p.vy;
+      p.x += p.vx + Math.sin(t / 1400 + p.ph) * 0.25 * dpr;
+      if (p.y < -10) parts[i] = make(false);
+      const flick = 0.65 + 0.35 * Math.sin(t / 500 + p.ph);
+      x.beginPath();
+      x.fillStyle = "rgba(" + rgb + "," + (p.a * flick).toFixed(3) + ")";
+      x.arc(p.x, p.y, p.r, 0, 6.2832);
+      x.fill();
+    });
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
 load();
+setInterval(() => { if (!document.hidden) load(); }, 20000);
 </script>
 </body>
 </html>
